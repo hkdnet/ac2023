@@ -1,4 +1,5 @@
 const std = @import("std");
+const mem = @import("std").mem;
 
 fn nextToken(reader: anytype, buffer: []u8) []const u8 {
     return reader.readUntilDelimiter(
@@ -19,6 +20,35 @@ fn nextLine(reader: anytype, buffer: []u8) []const u8 {
 fn parseUsize(buf: []const u8) usize {
     return std.fmt.parseInt(usize, buf, 10) catch unreachable;
 }
+fn extract(buf: []const u8, idx: usize) ?u32 {
+    const c = buf[idx];
+
+    if (c >= '0' and c <= '9') {
+        return c - '0';
+    }
+    var literals = [_][]const u8{
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+    };
+    for (literals, 1..) |literal, val| {
+        const r = idx + literal.len;
+        if (r > buf.len) {
+            continue;
+        }
+        if (mem.eql(u8, buf[idx .. idx + literal.len], literal)) {
+            return @intCast(val);
+        }
+    }
+
+    return null;
+}
 
 pub fn main() !void {
     const stdin = std.io.getStdIn();
@@ -31,12 +61,14 @@ pub fn main() !void {
         var tmp: u32 = 0;
         var l: u32 = 10;
         var r: u32 = 10;
-        for (line) |c| {
-            if (c >= '0' and c <= '9') {
+        for (0..line.len) |i| {
+            const v = extract(line, i);
+
+            if (v) |val| {
                 if (l == 10) {
-                    l = c - '0';
+                    l = val;
                 }
-                r = c - '0';
+                r = val;
             }
         }
         tmp = l * 10 + r;
