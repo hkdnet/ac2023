@@ -84,11 +84,36 @@ solveA games = sum $ map fst validGames
   where
     validGames = filter isValidGame games
 
+solveB :: Input -> Output
+solveB games = sum scores
+  where
+    scores = map sumOfPower games
+
+sumOfPower :: GameInput -> Integer
+sumOfPower (_, sets) = r * g * b
+  where
+    (r, g, b) = foldl maxTriplet (0, 0, 0) a
+    a = setsToTriplets sets
+
+setsToTriplets :: [SetInput] -> [(Integer, Integer, Integer)]
+setsToTriplets = concatMap setToTriplets
+
+setToTriplets :: SetInput -> [(Integer, Integer, Integer)]
+setToTriplets = map ballToTriplet
+
+ballToTriplet :: BallOut -> (Integer, Integer, Integer)
+ballToTriplet (R, d) = (d, 0, 0)
+ballToTriplet (G, d) = (0, d, 0)
+ballToTriplet (B, d) = (0, 0, d)
+
+maxTriplet :: (Integer, Integer, Integer) -> (Integer, Integer, Integer) -> (Integer, Integer, Integer)
+maxTriplet (a, b, c) (d, e, f) = (max a d, max b e, max c f)
+
 main :: IO ()
 main = do
   str <- readFile "a2.in"
   f $ parseInput str
   where
     f = either err ok
-    ok i = print $ solveA i
+    ok i = print $ solveB i
     err = print
