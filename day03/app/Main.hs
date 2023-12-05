@@ -51,21 +51,26 @@ extractDigits str = catMaybes maybeList
     f (c, idx) = (\d -> (d, idx)) <$> cToD c
     indexed = withIndex str
 
-extractSymbols :: String -> [Int]
-extractSymbols line = idx
+extractSymbols :: String -> [(Char, Int)]
+extractSymbols line = filter onlySymbol indexed
   where
-    idx = map snd filtered
-    filtered = filter onlySymbol indexed
     onlySymbol (c, _) = isSymbol c
     indexed = withIndex line
 
 collectSymbols :: [String] -> [(Int, [Int])]
 collectSymbols lines = map f indexed
   where
-    f (line, lineNo) = (lineNo, extractSymbols line)
+    f (line, lineNo) = (lineNo, map snd $ extractSymbols line)
     indexed = withIndex lines
 
--- solveA :: String -> Int
+collectGears :: [String] -> [(Int, Int)]
+collectGears lines = concatMap f indexed
+  where
+    f (line, lineNo) = map (\t -> (snd t, lineNo)) $ filter (isGear . fst) $ extractSymbols line
+    isGear = (==) '*'
+    indexed = withIndex lines
+
+solveA :: String -> Int
 solveA str = sum $ map ((\(d, _, _) -> d) . fst) filtered
   where
     lines = splitOn '\n' str
@@ -75,6 +80,26 @@ solveA str = sum $ map ((\(d, _, _) -> d) . fst) filtered
         f (l, lineIndex) = map (\numInfo -> (numInfo, lineIndex)) $ parseLine l
     symbols = collectSymbols lines
     filtered = filter (hasAnyAdjucant symbols) parsedLines
+
+solveB :: String -> Int
+solveB str = sum $ map product $ filter (\d -> length d == 2) as
+  where
+    lines = splitOn '\n' str
+    linesWithIndex = withIndex lines
+    parsedLines = concatMap f linesWithIndex
+      where
+        f (l, lineIndex) = map (\numInfo -> (numInfo, lineIndex)) $ parseLine l
+    gears = collectGears lines
+    as = map (collectAdjucant parsedLines) gears
+
+collectAdjucant :: [(NumberInfo, Int)] -> (Int, Int) -> [Int]
+collectAdjucant = f []
+  where
+    f acc [] gear = acc
+    f acc (num@((x, s, e), lineNo) : rest) g@(col, line) =
+      if lineNo - 1 <= line && line <= lineNo + 1 && s - 1 <= col && col <= e + 1
+        then f (x : acc) rest g
+        else f acc rest g
 
 hasAnyAdjucant :: [(Int, [Int])] -> (NumberInfo, Int) -> Bool
 hasAnyAdjucant symbols ((d, s, e), numLine) = any f symbols
@@ -92,4 +117,4 @@ main :: IO ()
 main = do
   args <- getArgs
   str <- readFile $ head args
-  print $ solveA str
+  print $ solveB str
