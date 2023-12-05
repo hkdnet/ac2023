@@ -78,8 +78,18 @@ solveA (seeds, mapSources) = minimum locations
     resolve seed = foldl (\acc resolver -> resolver acc) seed maps
     locations = map resolve seeds
 
-solveB :: Input -> Int
-solveB cards = 1 -- TODO
+solveB :: Input -> Integer
+solveB (seedInput, mapSources) = minimum locations
+  where
+    seeds = eachPair seedInput
+    maps = map buildMapResolver mapSources
+    resolve seed = foldl (\acc resolver -> resolver acc) seed maps
+    locations = concatMap (\(start, len) -> map resolve (take (fromIntegral len) [start, start + 1 ..])) seeds
+
+eachPair :: [a] -> [(a, a)]
+eachPair [] = []
+eachPair (a : b : rest) = (a, b) : eachPair rest
+eachPair _ = error "!?"
 
 main :: IO ()
 main = do
