@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Map qualified as Map
 import System.Environment (getArgs)
 import Text.Parsec
 import Text.Parsec.Expr
@@ -11,8 +12,6 @@ type Parser a = Parsec String () a
 type Card = (Integer, [Integer], [Integer])
 
 type Input = [Card]
-
-type Output = Int
 
 pNatural :: Parser Integer
 pNatural = TT.natural Lang.haskell
@@ -42,8 +41,8 @@ pInput = do
   _ <- eof
   return ret
 
-solve :: Input -> Output
-solve cards = sum $ map score cards
+solveA :: Input -> Int
+solveA cards = sum $ map score cards
 
 score :: Card -> Int
 score c =
@@ -56,6 +55,31 @@ score c =
 hitCount :: Card -> Int
 hitCount (_, a, b) = length $ filter (`elem` b) a
 
+cardId :: Card -> Integer
+cardId (x, _, _) = x
+
+solveB :: Input -> Int
+solveB cards = sum $ Map.elems m
+  where
+    m = solveB' cards (Map.fromList $ map (,1) cardIds)
+    cardIds = map cardId cards
+
+solveB' :: [Card] -> Map.Map Integer Int -> Map.Map Integer Int
+solveB' [] m = m
+solveB' (c@(cardId, _, _) : cs) m =
+  if Map.member cardId m
+    then solveB' cs newM
+    else m
+  where
+    h = hitCount c
+    incrKeys = take h [cardId + 1 ..]
+    newM = foldl (mapUpdater (m Map.! cardId)) m incrKeys
+
+mapUpdater :: Int -> Map.Map Integer Int -> Integer -> Map.Map Integer Int
+mapUpdater val m key
+  | Map.member key m = Map.update (\x -> Just (x + val)) key m
+  | otherwise = Map.insert key val m
+
 main :: IO ()
 main = do
   args <- getArgs
@@ -64,5 +88,5 @@ main = do
   where
     f = either err ok
     ok i = do
-      print $ solve i
+      print $ solveB i
     err = print
