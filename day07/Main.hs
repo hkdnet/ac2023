@@ -3,6 +3,7 @@ module Main where
 import Data.List
 import Data.Map qualified as Map
 import Data.Maybe (fromJust)
+import Data.Ord (Down (Down), comparing)
 import System.Environment (getArgs)
 import Text.Parsec
   ( Parsec,
@@ -41,15 +42,20 @@ data HandKind
   | FiveCards
   deriving (Eq, Show, Ord)
 
+isJoker :: Integer -> Bool
+isJoker = (==) 1
+
 handKind :: Hand -> HandKind
 handKind (H h)
-  | length g == 1 = FiveCards
+  | all isJoker h || length g == 1 = FiveCards
   | length g == 2 = if length (head g) == 4 || length (head g) == 1 then FourCards else FullHouse
   | length g == 3 = if elem 3 $ map length g then ThreeCards else TwoPairs
   | length g == 4 = OnePair
   | otherwise = HighCard
   where
-    g = group $ sort h
+    jokerCount = length $ filter isJoker h
+    (f : rest) = sortBy (\l1 l2 -> compare (length l2) (length l1)) (group $ sort $ filter (not . isJoker) h)
+    g = (f ++ replicate jokerCount 1) : rest
 
 newtype Hand = H [Card] deriving (Eq, Show)
 
@@ -59,7 +65,6 @@ cToI :: Char -> Integer
 cToI 'A' = 14
 cToI 'K' = 13
 cToI 'Q' = 12
-cToI 'J' = 11
 cToI 'T' = 10
 cToI '9' = 9
 cToI '8' = 8
@@ -69,6 +74,7 @@ cToI '5' = 5
 cToI '4' = 4
 cToI '3' = 3
 cToI '2' = 2
+cToI 'J' = 1
 
 pNatural :: Parser Integer
 pNatural = TT.natural Lang.haskell
