@@ -82,12 +82,12 @@ main = do
   args <- getArgs
   str <- readFile ("day06/" ++ args !! 1)
 
-  -- either print print $ parse pInput "" test
-  f (head args) $ parse pInput "a" str
+  if head args == "A"
+    then f (head args) $ parse pInput "a" str
+    else f (head args) $ parse pInput "a" (filter (/= ' ') str)
   where
+    -- either print print $ parse pInput "" test
     f ty = either err (ok ty)
     ok ty i = do
-      if ty == "A"
-        then print $ solveA i
-        else print $ solveB i
+      print $ solveA i
     err = print
