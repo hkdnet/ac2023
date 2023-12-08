@@ -62,3 +62,13 @@ executable day07
         , containers >= 0.7
     hs-source-dirs:   day07
     default-language: GHC2021
+
+executable day08
+    main-is:          Main.hs
+
+    build-depends:
+        , base ^>=4.17.2.0
+        , parsec >= 3.1.17.0
+        , containers >= 0.7
+    hs-source-dirs:   day08
+    default-language: GHC2021
