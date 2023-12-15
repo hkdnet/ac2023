@@ -56,7 +56,27 @@ upToN from n
 
 solveA i = sum $ map solveMapA i
 
-solveB i = 1
+solveB i = sum $ map solveMapB i
+
+solveMapB :: InputMap -> Int
+solveMapB (v, h, w) = head (map (\h -> 100 * (h + 1)) hs ++ map (+ 1) ws)
+  where
+    hs = map snd $ filter (\(d, _) -> d == 1) $ map horiDiff [0 .. h - 2]
+    horiDiff hIdx = (sum diffs, hIdx)
+      where
+        diffs = map (\(u, d) -> diffCount (fetchRow u) (fetchRow d)) $ horiSplitAt hIdx
+    ws = map snd $ filter (\(d, _) -> d == 1) $ map vertDiff [0 .. w - 2]
+    horiSplitAt hIdx = zip (downToZero hIdx) (upToN (hIdx + 1) (h - 1))
+    vertDiff wIdx = (sum diffs, wIdx)
+      where
+        diffs = zipWith (\u d -> diffCount (fetchCol u) (fetchCol d)) (downToZero wIdx) (upToN (wIdx + 1) (w - 1))
+    fetchRow i = map (pick v i) [0 .. w - 1]
+    fetchCol i = map (\x -> pick v x i) [0 .. h - 1]
+
+diffCount a b = f a b 0
+  where
+    f [] [] n = n
+    f (x : xs) (y : ys) n = f xs ys (if x == y then n else n + 1)
 
 main :: IO ()
 main = do
