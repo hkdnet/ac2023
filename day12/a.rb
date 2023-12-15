@@ -20,41 +20,71 @@ def possible?(s, nums, strict: false)
   end
 end
 
+def build_dp
+  Hash.new do |h,k|
+    h[k] = Hash.new do |hh, kk|
+      hh[kk] = 0
+    end
+  end
+end
+
 ans = 0
+
+solve = ->(str, nums) {
+  # nums index => # length => pattenrs
+  dp = build_dp
+  dp[0][0] = 1
+  str.chars.each do |c|
+    new_dp = build_dp
+    case c
+    when '#'
+      dp.each do |num_idx, h|
+        next if num_idx >= nums.size
+        h.each do |len, pat|
+          if len+1 <= nums[num_idx]
+            new_dp[num_idx][len+1] += pat
+          end
+        end
+      end
+    when '.'
+      dp.each do |num_idx, h|
+        new_dp[num_idx][0] += h[0]
+        v = h[nums[num_idx]]
+        new_dp[num_idx+1][0] += v
+      end
+    when '?'
+      dp.each do |num_idx, h|
+        next if num_idx >= nums.size
+        h.each do |len, pat|
+          if len+1 <= nums[num_idx]
+            new_dp[num_idx][len+1] += pat
+          end
+        end
+      end
+      dp.each do |num_idx, h|
+        new_dp[num_idx][0] += h[0]
+        v = h[nums[num_idx]]
+        new_dp[num_idx+1][0] += v
+      end
+    end
+
+    # p new_dp
+    dp = new_dp
+  end
+
+  dp[nums.size-1][nums[-1]] + dp[nums.size][0]
+}
 lines.each do |line|
   str, b = line.split(" ", 2)
   nums = b.split(",").map(&:to_i)
+  # str = 5.times.map { str }.join("?")
+  # nums = nums * 5
 
-  a = ['']
-  str.chars.each do |c|
-    # STDERR.puts "processing #{c}"
-    if c != '?'
-      a.map! { |e| e + c }
-      next
-    end
-
-    tmp = []
-
-    # STDERR.puts a.inspect
-    a.each do |e|
-      s = e + '.'
-      # STDERR.puts "testing #{s}"
-      tmp << s if possible?(s, nums)
-      s = e + '#'
-      # STDERR.puts "testing #{s}"
-      tmp << s if possible?(s, nums)
-    end
-    # STDERR.puts tmp.inspect
-
-    a = tmp
-  end
-
-  p a
-  a.select! { |e| possible?(e, nums, strict: true) }
-  puts "#{line} -> #{a.size}"
-  p a
-  puts "---"
-  ans += a.size
+  ret = solve[str, nums]
+  puts "#{line} -> #{ret}"
+  # p a
+  # puts "---"
+  ans += ret
 end
 
 puts "---"
