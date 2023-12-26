@@ -20,18 +20,17 @@ charToTile '.' = Empty
 
 type Input = (Tiles, Int, Int)
 
-type Tiles = V.Vector (V.Vector Tile)
+type Tiles = [[Tile]]
 
 parse :: String -> Input
-parse s = (linesToMap, length lines, length $ head lines)
+parse s = (map (map charToTile) lines, length lines, length $ head lines)
   where
     lines = filter (not . null) $ splitOn "\n" s
-    listToMap l = foldl (\acc (i, e) -> Map.insert i e acc) Map.empty $ zip [0 ..] l
-    lineToVec line = V.generate (length line) (listToMap (map charToTile line) Map.!)
-    linesToMap = V.generate (length lines) ((listToMap $ map lineToVec lines) Map.!)
 
-pick :: V.Vector (V.Vector a) -> Int -> Int -> a
-pick v x = (V.!) ((V.!) v x)
+pick :: [[Tile]] -> Int -> Int -> Tile
+pick v 0 0 = head $ head v
+pick ((a : r) : rest) 0 y = pick (r : rest) 0 (y - 1)
+pick (_ : rest) x y = pick rest (x - 1) y
 
 solveA (m, h, w) = calculate upperRows
   where
@@ -66,7 +65,21 @@ tailNonEmpty [] n = replicate n Empty
 tailNonEmpty (Empty : rest) n = tailNonEmpty rest (n + 1)
 tailNonEmpty (RoundRock : rest) n = replicate n Empty ++ rest
 
-solveB = solveA
+roundCount = 1000000000
+
+solveB (tiles, h, w) = calculate final
+  where
+    dirs = take (roundCount * 4) $ cycle [N, W, S, E]
+    final = foldl tilt tiles dirs
+
+tilt :: Tiles -> Direction -> Tiles
+tilt tiles N = transpose $ map upperCols (transpose tiles)
+tilt tiles W = map upperCols tiles
+tilt tiles S = transpose $ map (reverse . upperCols . reverse) (transpose tiles)
+tilt tiles E = map ((reverse . upperCols) . reverse) tiles
+  where
+    h = length tiles
+    w = length (head tiles)
 
 diffCount a b = f a b 0
   where
@@ -83,3 +96,11 @@ main = do
     -- either print print $ parse pInput "" test
     f "A" i = print $ solveA i
     f "B" i = print $ solveB i
+
+tileToChars :: Tiles -> String
+tileToChars = concatMap ((++ "\n") . f)
+  where
+    f = map ff
+    ff RoundRock = 'O'
+    ff CubeRock = '#'
+    ff Empty = '.'
