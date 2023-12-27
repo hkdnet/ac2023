@@ -65,9 +65,9 @@ tailNonEmpty [] n = replicate n Empty
 tailNonEmpty (Empty : rest) n = tailNonEmpty rest (n + 1)
 tailNonEmpty (RoundRock : rest) n = replicate n Empty ++ rest
 
-roundCount = 1000000000
+roundCount = 100
 
-solveB (tiles, h, w) = calculate final
+solveB (tiles, h, w) = tileToChars final
   where
     dirs = take (roundCount * 4) $ cycle [N, W, S, E]
     final = foldl tilt tiles dirs
@@ -95,7 +95,7 @@ main = do
   where
     -- either print print $ parse pInput "" test
     f "A" i = print $ solveA i
-    f "B" i = print $ solveB i
+    f "B" i = putStr $ solveB i
 
 tileToChars :: Tiles -> String
 tileToChars = concatMap ((++ "\n") . f)
