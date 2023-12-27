@@ -28,7 +28,6 @@ parse s = V.fromList $ filter (not . null) $ map parse' lines
 parse' :: String -> V.Vector Tile
 parse' s = V.fromList $ map cToTile s
 
--- solveA i = walk S.empty [((0, 0), E)] i
 solveA i = S.size $ S.map fst $ walk S.empty [((0, 0), E)] i
 
 type Point = (Int, Int)
@@ -87,7 +86,16 @@ backslashDir E = S
 
 pick board x = (V.!) ((V.!) board x)
 
-solveB i = 1
+-- memoize~~~~
+solveB i = maximum $ map (\start -> S.size $ S.map fst $ walk S.empty [start] i) starts
+  where
+    h = length i
+    w = length $ (V.!) i 0
+    starts =
+      map (\x -> ((x, 0), E)) [0 .. h - 1]
+        ++ map (\x -> ((x, w - 1), W)) [0 .. h - 1]
+        ++ map (\y -> ((0, y), S)) [0 .. w - 1]
+        ++ map (\y -> ((h - 1, y), N)) [0 .. w - 1]
 
 main :: IO ()
 main = do
