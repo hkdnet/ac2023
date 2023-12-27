@@ -57,8 +57,13 @@ diffSeq a = map f $ divvy 2 1 a
 isTerminal :: [Integer] -> Bool
 isTerminal = all (== 0)
 
-solveB :: (Num a) => p -> a
-solveB i = 1
+solveB i = sum $ map solveLineB i
+
+solveLineB line = fillFirstElement $ buildSequences line
+
+fillFirstElement :: [[Integer]] -> Integer
+fillFirstElement [a] = head a
+fillFirstElement (a : b) = head a - fillFirstElement b
 
 main :: IO ()
 main = do
