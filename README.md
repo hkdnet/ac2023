@@ -9,3 +9,5 @@
 * 12-2: dp
 * 14-2: memoize
 * 16-2: memoize
+* 17-1: dp
+* 17-2: dp
