@@ -179,10 +179,11 @@ uniq a = uniq' $ sort a
     uniq' [a] = [a]
     uniq' (a : b : rest) = if a == b then uniq' (b : rest) else a : uniq' (b : rest)
 
-solveB (workflows, parts) = sum list
+-- solveB (workflows, parts) = sum list
+solveB (workflows, parts) = length $ as
   where
     m = buildWorkflowMap workflows
-    as = uniq $ acceptable m (Next "in") []
+    as = map uniq $ acceptable m (Next "in") []
     combs = map (\c -> (c, combinations c as)) [1 .. length as]
     list = map f combs
     f (cnt, condsList) = mul * countSum
