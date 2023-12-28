@@ -87,7 +87,41 @@ fill' s cur = foldl f s [U, R, L, D]
       where
         nextPoint = add cur $ dToV d
 
-solveB i = 2
+solveB i = solveA $ map (\(_, _, s) -> hexToDirLen s) i
+
+hexToDirLen :: String -> (Direction, Integer, String)
+hexToDirLen s = (dir, len, s)
+  where
+    dir = sToD (s !! 5)
+    len = parseHex $ take 5 s
+
+sToD '0' = R
+sToD '1' = D
+sToD '2' = L
+sToD '3' = U
+
+parseHex :: String -> Integer
+parseHex = parseHex' . reverse
+
+parseHex' [] = 0
+parseHex' (c : cs) = hexChar c + 16 * parseHex' cs
+
+hexChar '0' = 0
+hexChar '1' = 1
+hexChar '2' = 2
+hexChar '3' = 3
+hexChar '4' = 4
+hexChar '5' = 5
+hexChar '6' = 6
+hexChar '7' = 7
+hexChar '8' = 8
+hexChar '9' = 9
+hexChar 'a' = 10
+hexChar 'b' = 11
+hexChar 'c' = 12
+hexChar 'd' = 13
+hexChar 'e' = 14
+hexChar 'f' = 15
 
 main :: IO ()
 main = do
