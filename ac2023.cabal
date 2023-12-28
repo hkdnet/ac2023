@@ -155,3 +155,15 @@ executable day18
         , split >= 0.2.4
     hs-source-dirs:   day18
     default-language: GHC2021
+
+executable day19
+    main-is:          Main.hs
+
+    build-depends:
+        , base ^>=4.17.2.0
+        , parsec >= 3.1.17.0
+        , containers >= 0.7
+        , vector >= 0.13.1.0
+        , split >= 0.2.4
+    hs-source-dirs:   day19
+    default-language: GHC2021
