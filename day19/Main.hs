@@ -146,7 +146,90 @@ solveA (workflows, parts) = sum $ map score $ filter (\p -> acceptP m p (Next "i
   where
     m = buildWorkflowMap workflows
 
-solveB i = 1
+acceptable :: M.Map String Workflow -> Destination -> [Cond] -> [[Cond]]
+acceptable _ Accept ret = [ret]
+acceptable _ Reject _ = []
+acceptable wm (Next cur) prev = concatMap f $ convertOps ops []
+  where
+    (_, ops) = (M.!) wm cur
+    f ((cond, dest), not) = acceptable wm dest (cond : map negateCond not ++ prev)
+
+convertOps :: [(Cond, Destination)] -> [Cond] -> [((Cond, Destination), [Cond])]
+convertOps [] _ = []
+convertOps (a@(cond, _) : rest) not = (a, not) : convertOps rest (cond : not)
+
+negateCond (GreaterThan p threshold) = LessThan p (threshold + 1)
+negateCond (LessThan p threshold) = GreaterThan p (threshold - 1)
+
+type XmasRange = ((Integer, Integer), (Integer, Integer), (Integer, Integer), (Integer, Integer))
+
+initialRange = ((0, 4001), (0, 4001), (0, 4001), (0, 4001))
+
+countPossibles :: XmasRange -> Integer
+countPossibles ((x1, x2), (m1, m2), (a1, a2), (s1, s2)) = if x > 0 && m > 0 && a > 0 && s > 0 then x * m * a * s else 0
+  where
+    x = x2 - x1 - 1
+    m = m2 - m1 - 1
+    a = a2 - a1 - 1
+    s = s2 - s1 - 1
+
+uniq a = uniq' $ sort a
+  where
+    uniq' [] = []
+    uniq' [a] = [a]
+    uniq' (a : b : rest) = if a == b then uniq' (b : rest) else a : uniq' (b : rest)
+
+solveB (workflows, parts) = sum list
+  where
+    m = buildWorkflowMap workflows
+    as = uniq $ acceptable m (Next "in") []
+    combs = map (\c -> (c, combinations c as)) [1 .. length as]
+    list = map f combs
+    f (cnt, condsList) = mul * countSum
+      where
+        mul = if even cnt then -1 else 1
+        countSum = sum $ map ff condsList
+        ff conds = countPossibles $ filterOut initialRange (concat conds)
+
+debugRange = ((0, 4), (0, 4), (0, 4), (0, 4))
+
+debug as = (list, sum $ concat list)
+  where
+    combs = map (\c -> (c, combinations c as)) [1 .. length as]
+    list = map f combs
+    f (cnt, condsList) = map (* mul) countSum
+      where
+        mul = if even cnt then -1 else 1
+        countSum = map ff condsList
+        ff conds = countPossibles $ filterOut debugRange (concat conds)
+
+debug2 (workflows, parts) = map reverse $ acceptable m (Next "in") []
+  where
+    m = buildWorkflowMap workflows
+
+filterOut :: XmasRange -> [Cond] -> XmasRange
+filterOut cur [] = cur
+filterOut cur (op : rest) = filterOut nextCur rest
+  where
+    nextCur = applyFilter cur op
+
+combinations :: Int -> [a] -> [[a]]
+combinations n xs = comb n (length xs) xs
+  where
+    comb 0 _ _ = [[]]
+    comb r n a@(x : xs)
+      | n == r = [a]
+      | otherwise = map (x :) (comb (r - 1) (n - 1) xs) ++ comb r (n - 1) xs
+
+applyFilter ((x1, x2), m, a, s) (GreaterThan X threshold) = ((max x1 threshold, x2), m, a, s)
+applyFilter ((x1, x2), m, a, s) (LessThan X threshold) = ((x1, min threshold x2), m, a, s)
+applyFilter (x, (m1, m2), a, s) (GreaterThan M threshold) = (x, (max m1 threshold, m2), a, s)
+applyFilter (x, (m1, m2), a, s) (LessThan M threshold) = (x, (m1, min threshold m2), a, s)
+applyFilter (x, m, (a1, a2), s) (GreaterThan A threshold) = (x, m, (max a1 threshold, a2), s)
+applyFilter (x, m, (a1, a2), s) (LessThan A threshold) = (x, m, (a1, min threshold a2), s)
+applyFilter (x, m, a, (s1, s2)) (GreaterThan S threshold) = (x, m, a, (max s1 threshold, s2))
+applyFilter (x, m, a, (s1, s2)) (LessThan S threshold) = (x, m, a, (s1, min threshold s2))
+applyFilter a Always = a
 
 main :: IO ()
 main = do
