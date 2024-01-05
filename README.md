@@ -14,3 +14,4 @@
 * 18-2: coor compress
 * 19-2(*): 包除原理じゃだめっぽい。memoize?
 * 20-1: stateful
+* 20-2: stateful

@@ -1,3 +1,5 @@
 zig-*/
 node_modules/
 dist-newstyle/
+*.png
+*.dot
